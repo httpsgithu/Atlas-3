@@ -78,7 +78,7 @@ define(function(require, exports) {
             url: config.api.url + 'user/me',
             method: 'GET',
             success: function (info, textStatus, jqXHR) {
-                permissions(info.permissions.map(p => p.permission));
+                permissions(info.permissionIdx);  // read from permission index of User info
                 subject(info.login);
                 authProvider(jqXHR.getResponseHeader('x-auth-provider'));
                 fullName(info.name ? info.name : info.login);
@@ -88,6 +88,9 @@ define(function(require, exports) {
                 if (err.status === 401) {
                     console.log('User is not authed');
                     subject(null);
+                    if (config.enableSkipLogin) {
+                        signInOpened(true);
+                    }
                     resolve();
                 } else {
                     reject('Cannot retrieve user info');
@@ -173,32 +176,44 @@ define(function(require, exports) {
         }
     }
 
+    // adapted from https://github.com/apache/shiro/blob/fa518ec985fd192497cd04e2569041b2f469aead/core/src/main/java/org/apache/shiro/authz/permission/WildcardPermission.java#L201
+
     var checkPermission = function(permission, etalon) {
-        // etalon may be like '*:read,write:etc'
-        if (!etalon || !permission) {
+        // etalon may be like '*:read,write:etc', and is a permission assigned to the user.
+        // permission is the permission to check
+        if (!etalon || !permission) { // both must be non-null to perform a check
             return false;
         }
 
-        if (permission == etalon) {
+        if (permission == etalon) { // quick check: if equal on both sides, then permission is granted.
             return true;
         }
 
         var etalonLevels = etalon.split(':');
         var permissionLevels = permission.split(':');
 
-        if (etalonLevels.length != permissionLevels.length) {
-            return false;
+        var i = 0;
+        for (let permissionLevel of permissionLevels) {
+            // If this etalon has less parts than the permission, everything after the number of parts contained
+            // in this etalon is automatically implied, so return true
+            if (etalonLevels.length - 1 < i) {
+                return true;
+            } else {
+                var etalonPart = etalonLevels[i].split(',');
+                var permissionPart = permissionLevel.split(',');
+                if (!etalonPart.includes("*") && !permissionPart.every(pp => etalonPart.includes(pp))) {
+                    return false;
+                }
+            }
+            i++;
         }
-
-        for (var i = 0; i < permissionLevels.length; i++) {
-            var pLevel = permissionLevels[i];
-            var eLevels = etalonLevels[i].split(',');
-
-            if (eLevels.indexOf('*') < 0 && eLevels.indexOf(pLevel) < 0) {
+        // If etalon has more parts than the permission, return true if rest of eLevels contains wildcard
+        for (; i < etalonLevels.length; i++) { // loop through remaining etalonLevels
+            var etalonPart = etalonLevels[i].split(',');
+            if (!etalonPart.includes("*")) {
                 return false;
             }
         }
-
         return true;
     };
 
@@ -207,7 +222,11 @@ define(function(require, exports) {
             return true;
         }
 
-        var etalons = permissions();
+        if (!permissions()) return false;
+
+        firstPerm = permission.split(":")[0];
+
+        var etalons = [...(permissions()["*"] || []),  ...(permissions()[firstPerm]||[])];
         if (!etalons) {
             return false;
         }
@@ -250,6 +269,10 @@ define(function(require, exports) {
         return p && typeof p === 'object' && typeof p.status === 'function' && p.status() === 'pending';
     }
     var refreshToken = function() {
+
+        if (!config.userAuthenticationEnabled) {
+            return Promise.resolve(true); // no-op if userAuthenticationEnabled == false
+        }
 
         if (!isPromisePending(refreshTokenPromise)) {
           refreshTokenPromise = httpService.doGet(getServiceUrl() + "user/refresh");
@@ -479,6 +502,14 @@ define(function(require, exports) {
         return isPermitted(`cache:clear:get`);
     };
 
+    const isPermittedTagsManagement = function () {
+        return isPermitted(`tag:management`);
+    };
+
+    const isPermittedConceptSetAnnotationsDelete = function (conceptSetId) {
+        return isPermitted('conceptset:' + conceptSetId + ':annotation:*:delete');
+    };    
+
     const isPermittedRunAs = () => isPermitted('user:runas:post');
 
     const isPermittedViewDataSourceReport = sourceKey => isPermitted(`cdmresults:${sourceKey}:*:get`);
@@ -487,7 +518,7 @@ define(function(require, exports) {
 
 	const setAuthParams = (tokenHeader, permissionsStr = '') => {
         !!tokenHeader && token(tokenHeader);
-        !!permissionsStr && permissions(permissionsStr.split('|'));
+        !!permissionsStr && permissions(permissionsStr);
     };
 
     var resetAuthParams = function () {
@@ -507,6 +538,12 @@ define(function(require, exports) {
           error,
         });
     };
+
+    const executeWithRefresh = async function(httpPromise) {
+        const result = await httpPromise;
+        await refreshToken();
+        return result;
+    }
 
     var api = {
         AUTH_PROVIDERS: AUTH_PROVIDERS,
@@ -596,13 +633,18 @@ define(function(require, exports) {
         isPermittedImportUsers,
         hasSourceAccess,
         isPermittedRunAs,
+        isPermittedTagsManagement,
         isPermittedClearServerCache,
         isPermittedViewDataSourceReport,
         isPermittedViewDataSourceReportDetails,
 
+        isPermittedConceptSetAnnotationsDelete,
+        
         loadUserInfo,
         TOKEN_HEADER,
         runAs,
+        executeWithRefresh,
+
     };
 
     return api;

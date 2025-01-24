@@ -4,6 +4,8 @@ define([
   "../options",
   "../utils",
   "../InputTypes/Range",
+  "../InputTypes/DateAdjustment",
+  "../InputTypes/ConceptSetSelection",
   "../CriteriaGroup",
   "text!./VisitOccurrenceTemplate.html",
   "../const",
@@ -13,6 +15,8 @@ define([
   options,
   utils,
   Range,
+  DateAdjustment,
+  ConceptSetSelection,
   CriteriaGroup,
   template,
   constants
@@ -43,6 +47,14 @@ define([
         },
       },
       {
+        ...constants.visitAttributes.addGenderCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.GenderCS() == null)
+            self.Criteria.GenderCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.visitAttributes.addStartDate,
         selected: false,
         action: function () {
@@ -67,11 +79,26 @@ define([
         },
       },
       {
+        ...constants.visitAttributes.addDateAdjustment,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DateAdjustment() == null) self.Criteria.DateAdjustment(new DateAdjustment());
+        },
+      },
+      {
         ...constants.visitAttributes.addType,
         selected: false,
         action: function () {
           if (self.Criteria.VisitType() == null)
             self.Criteria.VisitType(ko.observableArray());
+        },
+      },
+      {
+        ...constants.visitAttributes.addTypeCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.VisitTypeCS() == null)
+            self.Criteria.VisitTypeCS(new ConceptSetSelection({}, self.expression.ConceptSets));
         },
       },
       {
@@ -99,6 +126,14 @@ define([
         },
       },
       {
+        ...constants.visitAttributes.addProviderSpecialtyCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.ProviderSpecialtyCS() == null)
+            self.Criteria.ProviderSpecialtyCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.visitAttributes.addPlaceService,
         selected: false,
         action: function () {
@@ -107,10 +142,18 @@ define([
         },
       },
       {
+        ...constants.visitAttributes.addPlaceServiceCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.PlaceOfServiceCS() == null)
+            self.Criteria.PlaceOfServiceCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.visitAttributes.addPlaceServiceLocation,
         selected: false,
         action: function () {
-          if (self.Criteria.PlaceOfServiceLocation() === null) {
+          if (self.Criteria.PlaceOfServiceLocation() == null) {
             self.Criteria.PlaceOfServiceLocation(ko.observable());
           }
         },
@@ -132,7 +175,7 @@ define([
         ...constants.visitAttributes.addPlaceServiceDistance,
         selected: false,
         action: function () {
-          if (self.Criteria.PlaceOfServiceDistance() === null) {
+          if (self.Criteria.PlaceOfServiceDistance() == null) {
             self.Criteria.PlaceOfServiceDistance(new Range());
           }
         },
@@ -151,11 +194,11 @@ define([
       'components.conditionVisit.indexDataText',
       'The index date refers to the visit of <%= conceptSetName %>.',
       {
-        conceptSetName: utils.getConceptSetName(
+        conceptSetName: ko.pureComputed(() => utils.getConceptSetName(
           self.Criteria.CodesetId,
           self.expression.ConceptSets,
           ko.i18n('components.conditionVisit.anyVisit', 'Any Visit')
-        )
+        ))
       }
     );
   }

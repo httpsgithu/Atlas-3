@@ -4,6 +4,8 @@ define([
   "../utils",
   "../InputTypes/Range",
   "../InputTypes/Text",
+  "../InputTypes/DateAdjustment",
+  "../InputTypes/ConceptSetSelection",
   "../CriteriaGroup",
   "text!./ConditionOccurrenceTemplate.html",
   "../const",
@@ -14,6 +16,8 @@ define([
   utils,
   Range,
   Text,
+  DateAdjustment,
+  ConceptSetSelection,
   CriteriaGroup,
   template,
   constants
@@ -59,11 +63,27 @@ define([
         },
       },
       {
+        ...constants.occurrenceAttributes.addGenderCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.GenderCS() == null)
+            self.Criteria.GenderCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.occurrenceAttributes.addConditionStatus,
         selected: false,
         action: function () {
             if (self.Criteria.ConditionStatus() == null)
                 self.Criteria.ConditionStatus(ko.observableArray());
+        }
+      },
+      {
+        ...constants.occurrenceAttributes.addConditionStatusCS,
+        selected: false,
+        action: function () {
+            if (self.Criteria.ConditionStatusCS() == null)
+                self.Criteria.ConditionStatusCS(new ConceptSetSelection({}, self.expression.ConceptSets));
         }
       },
       {
@@ -91,6 +111,13 @@ define([
         },
       },
       {
+        ...constants.occurrenceAttributes.addDateAdjustment,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DateAdjustment() == null) self.Criteria.DateAdjustment(new DateAdjustment());
+        },
+      },
+      {
         ...constants.occurrenceAttributes.addType,
         selected: false,
         action: function () {
@@ -99,11 +126,27 @@ define([
         },
       },
       {
+        ...constants.occurrenceAttributes.addTypeCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.ConditionTypeCS() == null)
+            self.Criteria.ConditionTypeCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.occurrenceAttributes.addVisit,
         selected: false,
         action: function () {
           if (self.Criteria.VisitType() == null)
             self.Criteria.VisitType(ko.observableArray());
+        },
+      },
+      {
+        ...constants.occurrenceAttributes.addVisitCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.VisitTypeCS() == null)
+            self.Criteria.VisitTypeCS(new ConceptSetSelection({}, self.expression.ConceptSets));
         },
       },
       {
@@ -135,6 +178,14 @@ define([
         },
       },
       {
+        ...constants.occurrenceAttributes.addProviderSpecialtyCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.ProviderSpecialtyCS() == null)
+            self.Criteria.ProviderSpecialtyCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.occurrenceAttributes.addNested,
         selected: false,
         action: function () {
@@ -154,11 +205,11 @@ define([
       'components.conditionOccurrence.indexDataText',
       'The index date refers to the condition occurrence of <%= conceptSetName %>.',
       {
-        conceptSetName: utils.getConceptSetName(
+        conceptSetName: ko.pureComputed(() => utils.getConceptSetName(
           self.Criteria.CodesetId,
           self.expression.ConceptSets,
           ko.i18n('components.conditionOccurrence.anyCondition', 'Any Condition')
-        ),
+        )),
       }
     );
   }

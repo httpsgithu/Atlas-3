@@ -3,7 +3,8 @@ define([
   "../options",
   "../utils",
   "../InputTypes/Range",
-  "../InputTypes/Text",
+  "../InputTypes/DateAdjustment",
+  "../InputTypes/ConceptSetSelection",
   "../CriteriaGroup",
   "text!./DeathTemplate.html",
   "../const",
@@ -12,7 +13,8 @@ define([
   options,
   utils,
   Range,
-  Text,
+  DateAdjustment,
+  ConceptSetSelection,
   CriteriaGroup,
   template,
   constants
@@ -37,6 +39,14 @@ define([
         },
       },
       {
+        ...constants.occurrenceAttributes.addGenderCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.GenderCS() == null)
+            self.Criteria.GenderCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.deathAttributes.addDate,
         selected: false,
         action: function () {
@@ -49,11 +59,26 @@ define([
         },
       },
       {
+        ...constants.deathAttributes.addDateAdjustment,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DateAdjustment() == null) self.Criteria.DateAdjustment(new DateAdjustment());
+        },
+      },
+      {
         ...constants.deathAttributes.addType,
         selected: false,
         action: function () {
           if (self.Criteria.DeathType() == null)
             self.Criteria.DeathType(ko.observableArray());
+        },
+      },
+      {
+        ...constants.deathAttributes.addTypeCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DeathTypeCS() == null)
+            self.Criteria.DeathTypeCS(new ConceptSetSelection({}, self.expression.ConceptSets));
         },
       },
       {
@@ -88,11 +113,11 @@ define([
       'components.conditionDeath.indexDataText',
       'The index date refers to the death event of <%= conceptSetName %>.',
       {
-        conceptSetName: utils.getConceptSetName(
+        conceptSetName: ko.pureComputed(() => utils.getConceptSetName(
           self.Criteria.CodesetId,
           self.expression.ConceptSets,
           ko.i18n('components.conditionDeath.anyDeath', 'Any Death')
-        )
+        ))
       }
     );
   }

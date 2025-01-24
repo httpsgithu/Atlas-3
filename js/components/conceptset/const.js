@@ -11,8 +11,10 @@ define([
 		EXPRESSION: 'expression',
 		INCLUDED: 'included',
 		SOURCECODES: 'included-sourcecodes',
+		RECOMMEND: 'recommend',
 		EXPORT: 'conceptset-export',
 		IMPORT: 'conceptset-import',
+		ANNOTATION: 'annotation'
 	};
 	
 	const ConceptSetSources = {

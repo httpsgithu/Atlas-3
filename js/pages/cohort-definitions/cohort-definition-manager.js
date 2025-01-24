@@ -9,7 +9,7 @@ define(['jquery', 'knockout', 'text!./cohort-definition-manager.html',
 	'components/conceptset/utils',
 	'utils/DatatableUtils',
 	'components/cohortbuilder/CohortExpression',
-	'conceptsetbuilder/InputTypes/ConceptSet',
+	'components/conceptset/InputTypes/ConceptSet',
 	'components/conceptset/ConceptSetStore',
 	'services/CohortReporting',
 	'services/VocabularyProvider',
@@ -53,7 +53,7 @@ define(['jquery', 'knockout', 'text!./cohort-definition-manager.html',
 	'components/modal-exit-message',
 	'./components/reporting/cohort-reports/cohort-reports',
 	'components/security/access/configure-access-modal',
-	'components/tags/tags',
+	'components/tags/modal/tags-modal',
 	'components/authorship',
 	'utilities/sql',
 	'components/conceptset/conceptset-list',
@@ -194,10 +194,11 @@ define(['jquery', 'knockout', 'text!./cohort-definition-manager.html',
 			super(params);
 
 			this.previewVersion = sharedState.CohortDefinition.previewVersion;
-
+		    
 			this.pollTimeoutId = null;
 			this.authApi = authApi;
 			this.config = config;
+			this.enablePermissionManagement = config.enablePermissionManagement;	    
 			this.relatedSourcecodesOptions = globalConstants.relatedSourcecodesOptions;
 			this.commonUtils = commonUtils;
 			this.isLoading = ko.observable(false);
@@ -579,13 +580,39 @@ define(['jquery', 'knockout', 'text!./cohort-definition-manager.html',
 				]
 			};
 
+
+			this.sourcesTableOptions = commonUtils.getTableOptions('S');
+			this.sourcesColumns = [{
+				sortable: false,
+				className: 'generation-buttons-column',
+				render: () => `<span data-bind="template: { name: 'generation-buttons', data: $data }"></span>`
+			}, {
+				title: `<span>${ko.i18n('cohortDefinitions.cohortDefinitionManager.panels.sourceName', 'Source Name')()}</span>`,
+				data: 'name'
+			}, {
+				title: ko.i18n('cohortDefinitions.cohortDefinitionManager.panels.generationStatus', 'Generation Status'),
+				data: 'status'
+			}, {
+				title: ko.i18n('cohortDefinitions.cohortDefinitionManager.panels.people', 'People'),
+				data: 'personCount'
+			}, {
+				title: ko.i18n('cohortDefinitions.cohortDefinitionManager.panels.records', 'Records'),
+				data: 'recordCount'
+			}, {
+				title: ko.i18n('cohortDefinitions.cohortDefinitionManager.panels.generated', 'Generated'),
+				data: 'startTime'
+			}, {
+				title: ko.i18n('cohortDefinitions.cohortDefinitionManager.panels.generationDuration', 'Generation Duration'),
+				data: 'executionDuration'
+			}];
+
 			this.stopping = ko.pureComputed(() => this.cohortDefinitionSourceInfo().reduce((acc, target) => ({...acc, [target.sourceKey]: ko.observable(false)}), {}));
 			this.isSourceStopping = (source) => this.stopping()[source.sourceKey];
 
 			this.pollForInfoPeriodically = () => {
 				this.pollTimeoutId = PollService.add({
 					callback: () => this.pollForInfo(),
-					interval: 10000,
+					interval: config.pollInterval,
 				});
 			}
 
@@ -654,6 +681,7 @@ define(['jquery', 'knockout', 'text!./cohort-definition-manager.html',
 			this.currentJob = ko.observable();
 			this.reportingSourceStatusAvailable = ko.observable(false);
 			this.reportingSourceStatusLoading = ko.observable(false);
+			this.showOnlySourcesWithResults = ko.observable(false);
 			this.isGenerated = ko.observable(false);
 			this.reportOptionCaption = ko.pureComputed(() => {
 				return this.reportingSourceStatusLoading()
@@ -890,7 +918,7 @@ define(['jquery', 'knockout', 'text!./cohort-definition-manager.html',
 		startPolling(cd, source) {
 			this.pollId = PollService.add({
 				callback: () => this.queryHeraclesJob(cd, source),
-				interval: 10000,
+				interval: config.pollInterval,
 			});
 		}
 
@@ -1509,6 +1537,8 @@ define(['jquery', 'knockout', 'text!./cohort-definition-manager.html',
 				return "observation-criteria-viewer";
 			else if (data.hasOwnProperty("VisitOccurrence"))
 				return "visit-occurrence-criteria-viewer";
+			else if (data.hasOwnProperty("VisitDetail"))
+				return "visit-detail-criteria-viewer";
 			else if (data.hasOwnProperty("DeviceExposure"))
 				return "device-exposure-criteria-viewer";
 			else if (data.hasOwnProperty("Measurement"))
@@ -1562,7 +1592,7 @@ define(['jquery', 'knockout', 'text!./cohort-definition-manager.html',
 			    this.sortedConceptSets().forEach((set) => {
 				setsText += '\n' + set.name() + '\n';
 				columns.forEach((c) => {
-				    setsText += c.title + '\t';
+				    setsText += c.title() + '\t';
 				});
 				setsText += 'Excluded\tDescendants\tMapped' + '\n';
 				set.expression.items().forEach((item) => {

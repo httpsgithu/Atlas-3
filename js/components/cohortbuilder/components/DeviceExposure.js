@@ -4,6 +4,8 @@ define([
   "../utils",
   "../InputTypes/Range",
   "../InputTypes/Text",
+  "../InputTypes/DateAdjustment",
+  "../InputTypes/ConceptSetSelection",
   "../CriteriaGroup",
   "text!./DeviceExposureTemplate.html",
   "../const",
@@ -13,6 +15,8 @@ define([
   utils,
   Range,
   Text,
+  DateAdjustment,
+  ConceptSetSelection,
   CriteriaGroup,
   template,
   constants
@@ -55,6 +59,14 @@ define([
         },
       },
       {
+        ...constants.deviceAttributes.addGenderCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.GenderCS() == null)
+            self.Criteria.GenderCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.deviceAttributes.addStartDate,
         selected: false,
         action: function () {
@@ -79,6 +91,13 @@ define([
         },
       },
       {
+        ...constants.deviceAttributes.addDateAdjustment,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DateAdjustment() == null) self.Criteria.DateAdjustment(new DateAdjustment());
+        },
+      },
+      {
         ...constants.deviceAttributes.addType,
         selected: false,
         action: function () {
@@ -87,11 +106,27 @@ define([
         },
       },
       {
+        ...constants.deviceAttributes.addTypeCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DeviceTypeCS() == null)
+            self.Criteria.DeviceTypeCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.deviceAttributes.addVisit,
         selected: false,
         action: function () {
           if (self.Criteria.VisitType() == null)
             self.Criteria.VisitType(ko.observableArray());
+        },
+      },
+      {
+        ...constants.deviceAttributes.addVisitCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.VisitTypeCS() == null)
+            self.Criteria.VisitTypeCS(new ConceptSetSelection({}, self.expression.ConceptSets));
         },
       },
       {
@@ -135,6 +170,14 @@ define([
         },
       },
       {
+        ...constants.deviceAttributes.addProviderSpecialtyCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.ProviderSpecialtyCS() == null)
+            self.Criteria.ProviderSpecialtyCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.deviceAttributes.addNested,
         selected: false,
         action: function () {
@@ -158,11 +201,11 @@ define([
       'components.conditionDevice.indexDataText',
       'The index date refers to the device exposure of <%= conceptSetName %>.',
       {
-        conceptSetName: utils.getConceptSetName(
+        conceptSetName: ko.pureComputed(() => utils.getConceptSetName(
           self.Criteria.CodesetId,
           self.expression.ConceptSets,
           ko.i18n('components.conditionDevice.anyDevice', 'Any Device')
-        ),
+        ))
       }
     );
   }

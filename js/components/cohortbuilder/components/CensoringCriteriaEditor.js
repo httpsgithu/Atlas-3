@@ -141,6 +141,20 @@ define([
                 },
             },
             {
+                ...constants.censoringEventList.addObservationPeriod,
+                selected: false,
+                action: function () {
+                    var unwrappedExpression = ko.utils.unwrapObservable(self.expression);
+                    unwrappedExpression
+                        .CensoringCriteria.push({
+                        ObservationPeriod: new criteriaTypes.ObservationPeriod(
+                            null,
+                            unwrappedExpression.ConceptSets
+                        ),
+                    });
+                },
+            },
+            {
                 ...constants.censoringEventList.addPayerPlanPeriod,
                 selected: false,
                 action: function () {
@@ -193,6 +207,19 @@ define([
                 },
             },
             {
+                ...constants.censoringEventList.addVisitDetail,
+                selected: false,
+                action: function () {
+                    var unwrappedExpression = ko.utils.unwrapObservable(self.expression);
+                    unwrappedExpression.CensoringCriteria.push({
+                        VisitDetail: new criteriaTypes.VisitDetail(
+                            null,
+                            unwrappedExpression.ConceptSets
+                        ),
+                    });
+                },
+            },
+            {
                 ...constants.censoringEventList.fromReusable,
                 selected: false,
                 action: function () {
@@ -222,6 +249,8 @@ define([
                 return "observation-criteria";
             else if (data.hasOwnProperty("VisitOccurrence"))
                 return "visit-occurrence-criteria";
+            else if (data.hasOwnProperty("VisitDetail"))
+                return "visit-detail-criteria";
             else if (data.hasOwnProperty("DeviceExposure"))
                 return "device-exposure-criteria";
             else if (data.hasOwnProperty("Measurement"))

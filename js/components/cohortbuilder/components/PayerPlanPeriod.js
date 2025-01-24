@@ -2,11 +2,13 @@ define([
   "knockout",
   "../options",
   "../InputTypes/Range",
+  "../InputTypes/DateAdjustment",
+  "../InputTypes/ConceptSetSelection",
   "../InputTypes/Period",
   "../CriteriaGroup",
   "text!./PayerPlanPeriodTemplate.html",
   "../const"
-], function (ko, options, Range, Period, CriteriaGroup, template, constants) {
+], function (ko, options, Range, DateAdjustment, ConceptSetSelection, Period, CriteriaGroup, template, constants) {
   function PayerPlanPeriodViewModel(params) {
     var self = this;
 
@@ -39,22 +41,6 @@ define([
         },
       },
       {
-        ...constants.payerPlanAttributes.addLength,
-        selected: false,
-        action: function () {
-          if (self.Criteria.PeriodLength() == null)
-            self.Criteria.PeriodLength(new Range());
-        },
-      },
-      {
-        ...constants.payerPlanAttributes.addGender,
-        selected: false,
-        action: function () {
-          if (self.Criteria.Gender() == null)
-            self.Criteria.Gender(ko.observableArray());
-        },
-      },
-      {
         ...constants.payerPlanAttributes.addUserDefined,
         selected: false,
         action: function () {
@@ -84,6 +70,37 @@ define([
                 Op: "lt",
               })
             );
+        },
+      },
+      {
+        ...constants.payerPlanAttributes.addDateAdjustment,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DateAdjustment() == null) self.Criteria.DateAdjustment(new DateAdjustment());
+        },
+      },
+      {
+        ...constants.payerPlanAttributes.addLength,
+        selected: false,
+        action: function () {
+          if (self.Criteria.PeriodLength() == null)
+            self.Criteria.PeriodLength(new Range());
+        },
+      },
+      {
+        ...constants.payerPlanAttributes.addGender,
+        selected: false,
+        action: function () {
+          if (self.Criteria.Gender() == null)
+            self.Criteria.Gender(ko.observableArray());
+        },
+      },
+      {
+        ...constants.payerPlanAttributes.addGenderCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.GenderCS() == null)
+            self.Criteria.GenderCS(new ConceptSetSelection({}, self.expression.ConceptSets));
         },
       },
       {

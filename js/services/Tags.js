@@ -42,8 +42,28 @@ define(function (require) {
         return httpService.doDelete(config.webAPIRoot + `${assetType}/${assetId}/protectedtag/${tagId}`);
     }
 
+    function multiAssign(data) {
+        return httpService.doPost(config.webAPIRoot + `tag/multiAssign`, data);
+    }
+
+    function multiUnassign(data) {
+        return httpService.doPost(config.webAPIRoot + `tag/multiUnassign`, data);
+    }
+
     function createNewTag(tag) {
         return httpService.doPost(config.webAPIRoot + `tag/`, tag);
+    }
+
+    function getTag(id) {
+        return httpService.doGet(config.webAPIRoot + `tag/${id}`);
+    }
+
+    function updateTag(tag) {
+        return httpService.doPut(config.webAPIRoot + `tag/${tag.id}`, tag);
+    }
+
+    function deleteTag(tag) {
+        return httpService.doDelete(config.webAPIRoot + `tag/${tag.id}`);
     }
 
     function checkPermissionForAssignProtectedTag(assetType, assetId) {
@@ -52,6 +72,11 @@ define(function (require) {
 
     function checkPermissionForUnassignProtectedTag(assetType, assetId, tagId) {
         return authService.isPermitted(`${assetType}:${assetId}:protectedtag:${tagId}:delete`);
+    }
+
+    async function getAssignmentPermissions() {
+        const res = await httpService.doGet(config.webAPIRoot + `tag/assignmentPermissions`);
+        return res.data;
     }
 
     function decorateComponent(component, { assetTypeGetter, assetGetter, addTagToAsset, removeTagFromAsset }) {
@@ -126,5 +151,13 @@ define(function (require) {
         unassignTag,
         loadTagsSuggestions,
         decorateComponent,
+        loadAvailableTags,
+        getAssignmentPermissions,
+        multiAssign,
+        multiUnassign,
+        createNewTag,
+        getTag,
+        updateTag,
+        deleteTag
     };
 });

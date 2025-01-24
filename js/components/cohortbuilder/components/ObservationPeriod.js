@@ -2,11 +2,13 @@ define([
   "knockout",
   "../options",
   "../InputTypes/Range",
+  "../InputTypes/DateAdjustment",
+  "../InputTypes/ConceptSetSelection",
   "../InputTypes/Period",
   "../CriteriaGroup",
   "text!./ObservationPeriodTemplate.html",
   "../const"
-], function (ko, options, Range, Period, CriteriaGroup, template, constants) {
+], function (ko, options, Range, DateAdjustment, ConceptSetSelection, Period, CriteriaGroup, template, constants) {
   function ObservationPeriodViewModel(params) {
     var self = this;
 
@@ -71,11 +73,26 @@ define([
         },
       },
       {
+        ...constants.observationPeriodAttributes.addDateAdjustment,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DateAdjustment() == null) self.Criteria.DateAdjustment(new DateAdjustment());
+        },
+      },
+      {
         ...constants.observationPeriodAttributes.addType,
         selected: false,
         action: function () {
           if (self.Criteria.PeriodType() == null)
             self.Criteria.PeriodType(ko.observableArray());
+        },
+      },
+      {
+        ...constants.observationPeriodAttributes.addTypeCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.PeriodTypeCS() == null)
+            self.Criteria.PeriodTypeCS(new ConceptSetSelection({}, self.expression.ConceptSets));
         },
       },
       {

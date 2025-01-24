@@ -25,7 +25,7 @@ define([
 	'./tabs/pathway-utils',
 	'faceted-datatable',
 	'components/security/access/configure-access-modal',
-	'components/tags/tags',
+	'components/tags/modal/tags-modal',
 	'components/checks/warnings',
 	'components/heading',
 	'components/authorship',
@@ -58,6 +58,7 @@ define([
 			this.design = sharedState.CohortPathways.current;
 			this.previewVersion = sharedState.CohortPathways.previewVersion;
 			this.dirtyFlag = sharedState.CohortPathways.dirtyFlag;
+			this.enablePermissionManagement = config.enablePermissionManagement;	 
 			this.executionId = ko.observable(params.router.routerParams().executionId);
 			this.selectedSourceId = ko.observable(params.router.routerParams().sourceId);
 			this.analysisId = ko.observable();

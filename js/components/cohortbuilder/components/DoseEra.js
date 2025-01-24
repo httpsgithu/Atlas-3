@@ -3,10 +3,12 @@ define([
   "../options",
   "../utils",
   "../InputTypes/Range",
+  "../InputTypes/DateAdjustment",
+  "../InputTypes/ConceptSetSelection",
   "../CriteriaGroup",
   "text!./DoseEraTemplate.html",
   "../const",
-], function (ko, options, utils, Range, CriteriaGroup, template, constants) {
+], function (ko, options, utils, Range, DateAdjustment, ConceptSetSelection, CriteriaGroup, template, constants) {
   function DoseEraViewModel(params) {
     var self = this;
     self.expression = ko.utils.unwrapObservable(params.expression);
@@ -45,6 +47,14 @@ define([
         },
       },
       {
+        ...constants.doseAttributes.addGenderCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.GenderCS() == null)
+            self.Criteria.GenderCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.doseAttributes.addStartDate,
         selected: false,
         action: function () {
@@ -69,11 +79,26 @@ define([
         },
       },
       {
+        ...constants.doseAttributes.addDateAdjustment,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DateAdjustment() == null) self.Criteria.DateAdjustment(new DateAdjustment());
+        },
+      },
+      {
         ...constants.doseAttributes.addUnit,
         selected: false,
         action: function () {
           if (self.Criteria.Unit() == null)
             self.Criteria.Unit(ko.observableArray());
+        },
+      },
+      {
+        ...constants.doseAttributes.addUnitCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.UnitCS() == null)
+            self.Criteria.UnitCS(new ConceptSetSelection({}, self.expression.ConceptSets));
         },
       },
       {
@@ -112,10 +137,11 @@ define([
       'components.conditionDose.indexDataText',
       'The index date refers to the dose era of <%= conceptSetName %>.',
       {
-        conceptSetName: utils.getConceptSetName(
+        conceptSetName: ko.pureComputed(() => utils.getConceptSetName(
           self.Criteria.CodesetId,
           self.expression.ConceptSets,
-          ko.i18n('components.conditionDose.anyDoseEra', 'Any Dose Era'))
+          ko.i18n('components.conditionDose.anyDoseEra', 'Any Dose Era')
+        ))
       }
     );
   }

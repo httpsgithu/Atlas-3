@@ -3,7 +3,8 @@ define([
   "../options",
   "../utils",
   "../InputTypes/Range",
-  "../InputTypes/Text",
+  "../InputTypes/DateAdjustment",
+  "../InputTypes/ConceptSetSelection",
   "../CriteriaGroup",
   "text!./ProcedureOccurrenceTemplate.html",
   "../const",
@@ -12,7 +13,8 @@ define([
   options,
   utils,
   Range,
-  Text,
+  DateAdjustment,
+  ConceptSetSelection,
   CriteriaGroup,
   template,
   constants
@@ -43,6 +45,14 @@ define([
         },
       },
       {
+        ...constants.occurrenceAttributes.addGenderCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.GenderCS() == null)
+            self.Criteria.GenderCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.procedureOccurrenceAttributes.addDate,
         selected: false,
         action: function () {
@@ -55,11 +65,26 @@ define([
         },
       },
       {
+        ...constants.procedureOccurrenceAttributes.addDateAdjustment,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DateAdjustment() == null) self.Criteria.DateAdjustment(new DateAdjustment());
+        },
+      },
+      {
         ...constants.procedureOccurrenceAttributes.addType,
         selected: false,
         action: function () {
           if (self.Criteria.ProcedureType() == null)
             self.Criteria.ProcedureType(ko.observableArray());
+        },
+      },
+      {
+        ...constants.procedureOccurrenceAttributes.addTypeCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.ProcedureTypeCS() == null)
+            self.Criteria.ProcedureTypeCS(new ConceptSetSelection({}, self.expression.ConceptSets));
         },
       },
       {
@@ -71,11 +96,27 @@ define([
         },
       },
       {
+        ...constants.procedureOccurrenceAttributes.addVisitCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.VisitTypeCS() == null)
+            self.Criteria.VisitTypeCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.procedureOccurrenceAttributes.addModifier,
         selected: false,
         action: function () {
           if (self.Criteria.Modifier() == null)
             self.Criteria.Modifier(ko.observableArray());
+        },
+      },
+      {
+        ...constants.procedureOccurrenceAttributes.addModifierCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.ModifierCS() == null)
+            self.Criteria.ModifierCS(new ConceptSetSelection({}, self.expression.ConceptSets));
         },
       },
       {
@@ -107,6 +148,14 @@ define([
         },
       },
       {
+        ...constants.procedureOccurrenceAttributes.addProviderSpecialtyCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.ProviderSpecialtyCS() == null)
+            self.Criteria.ProviderSpecialtyCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.procedureOccurrenceAttributes.addNested,
         selected: false,
         action: function () {
@@ -130,11 +179,11 @@ define([
       'components.conditionProcedureOccurrence.indexDataText',
       'The index date refers to the procedure of <%= conceptSetName %>.',
       {
-        conceptSetName: utils.getConceptSetName(
+        conceptSetName: ko.pureComputed(() => utils.getConceptSetName(
           self.Criteria.CodesetId,
           self.expression.ConceptSets,
           ko.i18n('components.conditionProcedureOccurrence.anyProcedure', 'Any Procedure')
-        )
+        ))
       }
     );
   }

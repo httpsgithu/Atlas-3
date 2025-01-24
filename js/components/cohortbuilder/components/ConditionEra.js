@@ -3,10 +3,12 @@ define([
   "../options",
   "../utils",
   "../InputTypes/Range",
+  "../InputTypes/DateAdjustment",
+  "../InputTypes/ConceptSetSelection",  
   "../CriteriaGroup",
   "text!./ConditionEraTemplate.html",
   "../const",
-], function (ko, options, utils, Range, CriteriaGroup, template, constants) {
+], function (ko, options, utils, Range, DateAdjustment, ConceptSetSelection, CriteriaGroup, template, constants) {
   function ConditionEraViewModel(params) {
     var self = this;
     self.expression = ko.utils.unwrapObservable(params.expression);
@@ -57,6 +59,14 @@ define([
         },
       },
       {
+        ...constants.eraAttributes.addGenderCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.GenderCS() == null)
+            self.Criteria.GenderCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.eraAttributes.addStartDate,
         selected: false,
         action: function () {
@@ -78,6 +88,13 @@ define([
                 Op: "lt",
               })
             );
+        },
+      },
+      {
+        ...constants.eraAttributes.addDateAdjustment,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DateAdjustment() == null) self.Criteria.DateAdjustment(new DateAdjustment());
         },
       },
       {

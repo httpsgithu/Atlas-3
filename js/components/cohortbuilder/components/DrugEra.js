@@ -3,10 +3,12 @@ define([
   "../options",
   "../utils",
   "../InputTypes/Range",
+  "../InputTypes/DateAdjustment",
+  "../InputTypes/ConceptSetSelection",
   "../CriteriaGroup",
   "text!./DrugEraTemplate.html",
   "../const",
-], function (ko, options, utils, Range, CriteriaGroup, template, constants) {
+], function (ko, options, utils, Range, DateAdjustment, ConceptSetSelection, CriteriaGroup, template, constants) {
   function DrugEraViewModel(params) {
     var self = this;
     self.expression = ko.utils.unwrapObservable(params.expression);
@@ -45,6 +47,14 @@ define([
         },
       },
       {
+        ...constants.drugAttributes.addGenderCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.GenderCS() == null)
+            self.Criteria.GenderCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.drugAttributes.addStartDate,
         selected: false,
         action: function () {
@@ -66,6 +76,13 @@ define([
                 Op: "lt",
               })
             );
+        },
+      },
+      {
+        ...constants.eraAttributes.addDateAdjustment,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DateAdjustment() == null) self.Criteria.DateAdjustment(new DateAdjustment());
         },
       },
       {
@@ -103,11 +120,11 @@ define([
       'components.conditionDrug.indexDataText',
       'The index date refers to the drug era of <%= conceptSetName %>.',
       {
-        conceptSetName: utils.getConceptSetName(
+        conceptSetName: ko.pureComputed(() => utils.getConceptSetName(
           self.Criteria.CodesetId,
           self.expression.ConceptSets,
           ko.i18n('components.conditionDrug.anyDrug', 'Any Drug')
-        )
+        ))
       }
     );
   }

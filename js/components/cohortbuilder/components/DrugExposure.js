@@ -3,6 +3,8 @@ define([
   "../options",
   "../utils",
   "../InputTypes/Range",
+  "../InputTypes/DateAdjustment",
+  "../InputTypes/ConceptSetSelection",
   "../InputTypes/Text",
   "../CriteriaGroup",
   "text!./DrugExposureTemplate.html",
@@ -12,6 +14,8 @@ define([
   options,
   utils,
   Range,
+  DateAdjustment,
+  ConceptSetSelection,
   Text,
   CriteriaGroup,
   template,
@@ -54,6 +58,14 @@ define([
         },
       },
       {
+        ...constants.drugexposureAttributes.addGenderCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.GenderCS() == null)
+            self.Criteria.GenderCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.drugexposureAttributes.addStartDate,
         selected: false,
         action: function () {
@@ -78,6 +90,13 @@ define([
         },
       },
       {
+        ...constants.drugexposureAttributes.addDateAdjustment,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DateAdjustment() == null) self.Criteria.DateAdjustment(new DateAdjustment());
+        },
+      },
+      {
         ...constants.drugexposureAttributes.addType,
         selected: false,
         action: function () {
@@ -86,11 +105,27 @@ define([
         },
       },
       {
+        ...constants.drugexposureAttributes.addTypeCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DrugTypeCS() == null)
+            self.Criteria.DrugTypeCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.drugexposureAttributes.addVisit,
         selected: false,
         action: function () {
           if (self.Criteria.VisitType() == null)
             self.Criteria.VisitType(ko.observableArray());
+        },
+      },
+      {
+        ...constants.drugexposureAttributes.addVisitCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.VisitTypeCS() == null)
+            self.Criteria.VisitTypeCS(new ConceptSetSelection({}, self.expression.ConceptSets));
         },
       },
       {
@@ -150,6 +185,14 @@ define([
         },
       },
       {
+        ...constants.drugexposureAttributes.addRouteCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.RouteConceptCS() == null)
+            self.Criteria.RouteConceptCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.drugexposureAttributes.addEffective,
         selected: false,
         action: function () {
@@ -167,6 +210,14 @@ define([
         action: function () {
           if (self.Criteria.DoseUnit() == null)
             self.Criteria.DoseUnit(ko.observableArray());
+        },
+      },
+      {
+        ...constants.drugexposureAttributes.addUnitCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.DoseUnitCS() == null)
+            self.Criteria.DoseUnitCS(new ConceptSetSelection({}, self.expression.ConceptSets));
         },
       },
       {
@@ -198,6 +249,14 @@ define([
         },
       },
       {
+        ...constants.drugexposureAttributes.addProviderSpecialtyCS,
+        selected: false,
+        action: function () {
+          if (self.Criteria.ProviderSpecialtyCS() == null)
+            self.Criteria.ProviderSpecialtyCS(new ConceptSetSelection({}, self.expression.ConceptSets));
+        },
+      },
+      {
         ...constants.drugexposureAttributes.addNested,
         selected: false,
         action: function () {
@@ -220,11 +279,11 @@ define([
       'components.conditionDrugExposure.indexDataText',
       'The index date refers to the drug exposure of <%= conceptSetName %>.',
       {
-        conceptSetName: utils.getConceptSetName(
+        conceptSetName: ko.pureComputed(() => utils.getConceptSetName(
           self.Criteria.CodesetId,
           self.expression.ConceptSets,
           ko.i18n('components.conditionDrugExposure.anyDrug', 'Any Drug')
-        ),
+        ))
       }
     );
   }

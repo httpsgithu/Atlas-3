@@ -9,7 +9,7 @@
 				<td>
 					<span data-bind="text: ko.i18n('components.conditionDose.conditionDoseText_1', 'a dose era of')"></span>
 					<conceptset-selector params="conceptSetId: CodesetId, conceptSets: $component.expression.ConceptSets,
-					defaultText: ko.i18n('components.conditionDose.anyDrug', 'Any Drug')"></conceptset-selector>
+					defaultName: ko.i18n('components.conditionDose.anyDrug', 'Any Drug')"></conceptset-selector>
 				</td>
 				<td>
 					<div class="btn-group pull-right">
@@ -33,6 +33,13 @@
 				<col style="width:20px" />
 				<col />
 			</colgroup>
+			<tr data-bind="if: DateAdjustment() != null, visible: DateAdjustment() != null">
+				<td><i data-bind="click: function() { $component.removeCriterion('DateAdjustment') }, title: ko.i18n('common.remove', 'Remove')" class="fa fa-times" /></td>
+				<td>
+					<span data-bind="text: ko.i18n('components.conditionDose.attributeText_13', 'with date adjustment:')"></span>
+					<date-adjustment params="DateAdjustment: DateAdjustment"></date-adjustment>
+				</td>
+			</tr>
 			<tr data-bind="if: First() != null, visible: First() != null">
 				<td><i data-bind="click: function() { $component.removeCriterion('First') }, title: ko.i18n('common.remove', 'Remove')" class="fa fa-times" /></td>
 				<td>
@@ -64,6 +71,18 @@
 						<span data-bind="text: ko.i18n('components.conditionDose.conditionDoseText_5', 'with Unit:')"></span>
 
 						<concept-list params="PickerParams: { DefaultDomain: 'Unit'}, ConceptList: Unit()"></concept-list>
+					</div>
+				</td>
+			</tr>
+			<tr data-bind="if: UnitCS() != null, visible: UnitCS() != null">
+				<td><i data-bind="click: function() { $component.removeCriterion('UnitCS') }, title: ko.i18n('common.remove', 'Remove')" class="fa fa-times" /></td>
+				<td>
+					<div>
+						<span data-bind="text: ko.i18n('components.cohortCriteria.unitCS', 'with unit concept')"></span>
+						<cycle-toggle-input params="{value: UnitCS().IsExclusion, options: $component.options.DomainTypeExcludeOptions}">
+						</cycle-toggle-input>
+						<conceptset-selector params="conceptSetId: UnitCS().CodesetId, conceptSets: $component.expression.ConceptSets, 
+							defaultName: ko.i18n('components.cohortCriteria.anyUnit', 'Any Unit')"></conceptset-selector>
 					</div>
 				</td>
 			</tr>
@@ -113,7 +132,20 @@
 					</div>
 				</td>
 			</tr>
-			<tr data-bind="if: CorrelatedCriteria() != null, visible: CorrelatedCriteria() != null">
+		</tr>
+		<tr data-bind="if: GenderCS() != null, visible: GenderCS() != null">
+			<td><i data-bind="click: function() { $component.removeCriterion('GenderCS') }, title: ko.i18n('common.remove', 'Remove')" class="fa fa-times" /></td>
+			<td>
+				<div>
+					<span data-bind="text: ko.i18n('components.cohortCriteria.genderCS', 'with gender conept')"></span>
+					<cycle-toggle-input params="{value: GenderCS().IsExclusion, options: $component.options.DomainTypeExcludeOptions}">
+					</cycle-toggle-input>
+					<conceptset-selector params="conceptSetId: GenderCS().CodesetId, conceptSets: $component.expression.ConceptSets, 
+						defaultName: ko.i18n('components.cohortCriteria.anyGender', 'Any Gender')"></conceptset-selector>
+				</div>
+			</td>
+		</tr>
+		<tr data-bind="if: CorrelatedCriteria() != null, visible: CorrelatedCriteria() != null">
 				<td><i data-bind="click: function() { $component.removeCriterion('CorrelatedCriteria') }, title: ko.i18n('common.remove', 'Remove')" class="fa fa-times" /></td>
 				<td style="background-color: white">
 					<criteria-group

@@ -3,8 +3,8 @@ define([
 	'text!./conceptset-manager.html',
 	'pages/Page',
 	'utils/AutoBind',
-	'utils/CommonUtils',
-	'appConfig',
+        'utils/CommonUtils',
+       	'appConfig',
 	'./const',
 	'const',
 	'components/conceptset/utils',
@@ -12,14 +12,14 @@ define([
 	'services/Permission',
 	'services/Tags',
 	'components/security/access/const',
-	'conceptsetbuilder/InputTypes/ConceptSet',
-	'conceptsetbuilder/InputTypes/ConceptSetItem',
+	'components/conceptset/InputTypes/ConceptSet',
+	'components/conceptset/InputTypes/ConceptSetItem',
 	'atlas-state',
 	'services/ConceptSet',
 	'components/conceptset/ConceptSetStore',
 	'components/conceptset/utils',
 	'services/AuthAPI',
-    'lodash',
+	'lodash',
 	'databindings',
 	'bootstrap',
 	'faceted-datatable',
@@ -34,22 +34,24 @@ define([
 	'./components/tabs/conceptset-expression',
 	'components/conceptset/included',
 	'components/conceptset/included-sourcecodes',
+	'components/conceptset/recommend',
 	'components/conceptset/import',
 	'components/conceptset/export',
 	'./components/tabs/explore-evidence',
 	'./components/tabs/conceptset-compare',
 	'components/security/access/configure-access-modal',
-	'components/tags/tags',
+	'components/tags/modal/tags-modal',
 	'components/authorship',
 	'components/name-validation',
 	'components/ac-access-denied',
-	'components/versions/versions'
+	'components/versions/versions',
+	'./components/tabs/conceptset-annotation'
 ], function (
-	ko,
+        ko,
 	view,
 	Page,
 	AutoBind,
-	commonUtils,
+        commonUtils,
 	config,
 	constants,
 	globalConstants,
@@ -65,7 +67,7 @@ define([
 	ConceptSetStore,
 	conceptSetUtils,
 	authApi,
-    lodash,
+	lodash,
 ) {
   
   const { ViewMode, RESOLVE_OUT_OF_ORDER } = constants;
@@ -74,7 +76,8 @@ define([
 		constructor(params) {
 			super(params);
 			this.commonUtils = commonUtils;
-			this.conceptSetStore = ConceptSetStore.repository();
+		        this.conceptSetStore = ConceptSetStore.repository();
+			this.selectedSource = ko.observable();
 			this.currentConceptSet = ko.pureComputed(() => this.conceptSetStore.current());
 			this.previewVersion = sharedState.currentConceptSetPreviewVersion;
 			this.currentConceptSetDirtyFlag = sharedState.RepositoryConceptSet.dirtyFlag;
@@ -145,6 +148,14 @@ define([
 				}
 				return this.conceptSetStore.current() && authApi.isPermittedDeleteConceptset(this.conceptSetStore.current().id);
 			});
+
+			this.canDeleteAnnotations = ko.pureComputed(() => {
+				if (!config.userAuthenticationEnabled) {
+					return true;
+				}
+				return this.conceptSetStore.current() && authApi.isPermittedConceptSetAnnotationsDelete(this.conceptSetStore.current().id);
+			});
+
 			this.canOptimize = ko.computed(() => {
 				return (
 					this.currentConceptSet()
@@ -172,6 +183,7 @@ define([
 			this.canCopy = ko.computed(() => {
 				return this.currentConceptSet() && this.currentConceptSet().id > 0;
 			});
+			this.enablePermissionManagement = config.enablePermissionManagement;	    
 			this.isSaving = ko.observable(false);
 			this.isDeleting = ko.observable(false);
 			this.isOptimizing = ko.observable(false);
@@ -236,14 +248,14 @@ define([
 						tableOptions,
 						canEdit: this.canEdit,
 						currentConceptSet: this.conceptSetStore.current,
+						selectedSource: this.selectedSource,
 						conceptSetStore: this.conceptSetStore,
-						loading: this.conceptSetStore.loadingIncluded,
-						activeConceptSet: ko.observable(this.conceptSetStore),
+						loading: this.conceptSetStore.loadingIncluded
 					},
 					hasBadge: true,
 				},
 				{
-					title: ko.i18n('cs.manager.tabs.includedSourceCodes', 'Included Source Codes'),
+					title: ko.i18n('cs.manager.tabs.includedSourceCodes', 'Source Codes'),
 					key: ViewMode.SOURCECODES,
 					componentName: 'conceptset-list-included-sourcecodes',
 					componentParams: {
@@ -251,8 +263,22 @@ define([
 						tableOptions,
 						canEdit: this.canEdit,
 						conceptSetStore: this.conceptSetStore,
-						loading: this.conceptSetStore.loadingSourceCodes},
-						activeConceptSet: ko.observable(this.conceptSetStore),
+						selectedSource: this.selectedSource,
+						loading: this.conceptSetStore.loadingSourceCodes
+					},
+				},
+				{
+					title: ko.i18n('cs.manager.tabs.recommend', 'Recommend'),
+					key: ViewMode.RECOMMEND,
+					componentName: 'conceptset-recommend',
+					componentParams: {
+						...params,
+						tableOptions,
+						canEdit: this.canEdit,
+						conceptSetStore: this.conceptSetStore,
+						selectedSource: this.selectedSource,
+						loading: this.conceptSetStore.loadingRecommended
+					}
 				},
 				{
 					title: ko.i18n('cs.manager.tabs.exploreEvidence', 'Explore Evidence'),
@@ -291,9 +317,20 @@ define([
 					componentParams: {
 						...params,
 						saveConceptSetFn: this.saveConceptSet,
+						selectedSource: this.selectedSource,
 						saveConceptSetShow: this.saveConceptSetShow,
 					},
 					hidden: () => !!this.previewVersion()
+				},
+				{
+					title: ko.i18n('cs.manager.tabs.annotation', 'Annotation'),
+					key: ViewMode.ANNOTATION,
+					componentName: 'conceptset-annotation',
+					componentParams: {
+						getList: () => this.currentConceptSet().id ? conceptSetService.getConceptSetAnnotation(this.currentConceptSet().id) : [],
+						delete: (annotationId) => annotationId ? conceptSetService.deleteConceptSetAnnotation(this.currentConceptSet().id, annotationId) : null,					
+						canDeleteAnnotations: this.canDeleteAnnotations,
+					}
 				},
 				{
 					title: ko.i18n('cs.manager.tabs.versions', 'Versions'),
@@ -313,6 +350,7 @@ define([
 			this.selectedTab = ko.observable(0);
 
 			this.activeUtility = ko.observable("");
+			this.newConceptSetIdForCopyAnnotations = ko.observable(0);
 
 			GlobalPermissionService.decorateComponent(this, {
 				entityTypeGetter: () => entityType.CONCEPT_SET,
@@ -346,7 +384,7 @@ define([
 				}
 			});
 
-			this.conceptSetStore.isEditable(this.canEdit());
+		        this.conceptSetStore.isEditable(this.canEdit());
 			this.subscriptions.push(this.conceptSetStore.observer.subscribe(async () => {
 				// when the conceptSetStore changes (either through a new concept set being loaded or changes to concept set options), the concept set resolves and the view is refreshed.
 				// this must be done within the same subscription due to the asynchronous nature of the AJAX and UI interface (ie: user can switch tabs at any time)
@@ -451,6 +489,33 @@ define([
 			this.conceptSetCaption.dispose();
 		}
 
+		removeDataFilterStorage(){
+			localStorage.removeItem('filter-data');
+			localStorage.removeItem('filter-source');
+			localStorage.removeItem('data-remove-selected-concept');
+			localStorage.removeItem('data-add-selected-concept');
+		}
+
+		objectMap(obj) {
+			const newObject = {};
+			Object.keys(obj).forEach((key) => {
+			  if(typeof obj[key] === 'object'){
+				newObject[key] = JSON.stringify(obj[key]);
+			  }else{
+				newObject[key] = obj[key];
+			  }
+			});
+			return newObject;
+		}
+
+		handleConvertDataToString(arr){
+			const newDatas = [];
+			(arr || []).forEach(item => {
+				newDatas.push(this.objectMap(item))
+			})
+			return newDatas;
+		}
+
 		async saveConceptSet(conceptSet, nameElementId) {
 			if (this.previewVersion() && !confirm(ko.i18n('common.savePreviewWarning', 'Save as current version?')())) {
 				return;
@@ -469,11 +534,24 @@ define([
 					this.raiseConceptSetNameProblem(ko.i18n('cs.manager.csAlreadyExistsMessage', 'A concept set with this name already exists. Please choose a different name.')(), nameElementId);
 				} else {
 					const savedConceptSet = await conceptSetService.saveConceptSet(conceptSet);
+					const savedVersions = await this.versionsParams()?.getList();
+					let latestSavedVersion = 1;
+
+					if (savedVersions && Array.isArray(savedVersions)) {
+						latestSavedVersion = savedVersions.reduce((max, obj) => Math.max(max, obj.version), 1);
+					}
+
+					let annotationDataToAdd = JSON.parse(localStorage?.getItem('data-add-selected-concept') || null) || [];
+					const enrichedAnnotationDataToAdd = annotationDataToAdd.map(item => ({...item, "conceptSetVersion": latestSavedVersion}));
+
 					await conceptSetService.saveConceptSetItems(savedConceptSet.data.id, conceptSetItems);
+					await conceptSetService.saveConceptSetAnnotation(savedConceptSet.data.id, { newAnnotation: this.handleConvertDataToString(enrichedAnnotationDataToAdd), removeAnnotation: this.handleConvertDataToString(JSON.parse(localStorage?.getItem('data-remove-selected-concept') || null) || [])});
+					this.removeDataFilterStorage();
 
 					const current = this.conceptSetStore.current();
 					current.modifiedBy = savedConceptSet.data.modifiedBy;
 					current.modifiedDate = savedConceptSet.data.modifiedDate;
+					this.newConceptSetIdForCopyAnnotations(savedConceptSet.data.id);
 					this.conceptSetStore.current(current);
 
 					this.previewVersion(null);
@@ -515,11 +593,17 @@ define([
 		}
 
 		async copy() {
+			let sourceConceptSetId = this.currentConceptSet().id;
 			const responseWithName = await conceptSetService.getCopyName(this.currentConceptSet().id);
 			this.currentConceptSet().name(responseWithName.copyName);
 			this.currentConceptSet().id = 0;
 			this.currentConceptSetDirtyFlag().reset();
-			this.saveConceptSet(this.currentConceptSet(), "#txtConceptSetName");
+			await this.saveConceptSet(this.currentConceptSet(), "#txtConceptSetName");
+			let copyAnnotationsRequest = {
+				sourceConceptSetId: sourceConceptSetId,
+				targetConceptSetId: this.newConceptSetIdForCopyAnnotations(),
+			};
+			await conceptSetService.copyAnnotations(copyAnnotationsRequest);
 		}
 
 		async optimize() {

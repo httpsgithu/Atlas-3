@@ -6,7 +6,7 @@ define([
     'services/Tags',
     'components/security/access/const',
     'components/cohortbuilder/CriteriaGroup',
-    'conceptsetbuilder/InputTypes/ConceptSet',
+    'components/conceptset/InputTypes/ConceptSet',
     'components/conceptset/ConceptSetStore',
     './CharacterizationAnalysis',
     'text!./characterization-view-edit.html',
@@ -31,7 +31,7 @@ define([
     'components/heading',
     'components/authorship',
     'components/security/access/configure-access-modal',
-    'components/tags/tags',
+    'components/tags/modal/tags-modal',
     'components/checks/warnings',
     'components/name-validation',
     'components/versions/versions'
@@ -70,7 +70,7 @@ define([
             this.selectedSourceId = ko.observable(params.router.routerParams().sourceId);
             this.areStratasNamesEmpty = ko.observable();
             this.duplicatedStrataNames = ko.observable([]);
-
+            this.enablePermissionManagement = config.enablePermissionManagement;	        
             this.designDirtyFlag = sharedState.CohortCharacterization.dirtyFlag;
             this.loading = ko.observable(false);
             this.defaultName = ko.unwrap(constants.newEntityNames.characterization);

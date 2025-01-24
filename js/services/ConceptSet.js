@@ -10,8 +10,8 @@ define(function (require) {
 	const _ = require('lodash');
 	const hash = require('hash-it').default;
 	
-	function loadConceptSet(id) {
-		return httpService.doGet(config.api.url + 'conceptset/' + id).then(({ data }) => data);
+	async function loadConceptSet(id) {
+		return authApi.executeWithRefresh(httpService.doGet(config.api.url + 'conceptset/' + id).then(({ data }) => data));
 	}
 
 	function loadConceptSetExpression(conceptSetId) {
@@ -56,8 +56,8 @@ define(function (require) {
 			.then(({ data }) => data);
   }
 
-  function saveConceptSet(conceptSet) {
-		let promise = new Promise(r => r());
+  async function saveConceptSet(conceptSet) {
+		let promise;
 		const url = `${config.api.url}conceptset/${conceptSet.id ? conceptSet.id : ''}`;
 		if (conceptSet.id) {
 			promise = httpService.doPut(url, conceptSet);
@@ -74,6 +74,21 @@ define(function (require) {
 			.catch(authApi.handleAccessDenied);
 	}
 
+	function saveConceptSetAnnotation(id, conceptSetItems) {
+		return httpService.doPut(config.api.url + 'conceptset/' + id + '/annotation', conceptSetItems)
+			.catch(authApi.handleAccessDenied);
+	}
+
+	function getConceptSetAnnotation(conceptSetId) {
+		return httpService.doGet(config.webAPIRoot + 'conceptset/' + (conceptSetId || '-1') + '/annotation')
+			.catch(authApi.handleAccessDenied);
+	}
+
+	function deleteConceptSetAnnotation(conceptSetId, annotationId) {
+		return httpService.doDelete(config.webAPIRoot + 'conceptset/' + (conceptSetId || '-1') +'/annotation/' + (annotationId || '-1'))
+			.catch(authApi.handleAccessDenied);
+		}
+
 	function getConceptSet(conceptSetId) {
 		return httpService.doGet(config.webAPIRoot + 'conceptset/' + (conceptSetId || '-1'))
 			.catch(authApi.handleAccessDenied);
@@ -81,6 +96,12 @@ define(function (require) {
 
 	function getCopyName(id) {
 		return httpService.doGet(config.webAPIRoot + 'conceptset/' + (id || "") + "/copy-name")
+			.then(({ data }) => data);
+	}
+
+	function copyAnnotations(copyAnnotationsRequest) {
+		return httpService
+			.doPost(`${config.webAPIRoot}conceptset/copy-annotations`, copyAnnotationsRequest)
 			.then(({ data }) => data);
 	}
 
@@ -110,9 +131,10 @@ define(function (require) {
 		return httpService.doGet(`${config.webAPIRoot}conceptset/${conceptSetId}/version/${versionNumber}/expression` + (sourceKey ? `/${sourceKey}`: '')).then(({ data }) => data);
 	}
 
-	function copyVersion(conceptSetId, versionId) {
-		return httpService.doPut(`${config.webAPIRoot}conceptset/${conceptSetId}/version/${versionId}/createAsset`)
-			.then(({ data }) => data);
+	async function copyVersion(conceptSetId, versionId) {
+		return authApi.executeWithRefresh(httpService
+			.doPut(`${config.webAPIRoot}conceptset/${conceptSetId}/version/${versionId}/createAsset`)
+			.then(({ data }) => data));
 	}
 
 	function updateVersion(version) {
@@ -128,6 +150,7 @@ define(function (require) {
 		lookupIdentifiers,
 		getInclusionCount,
 		getCopyName,
+		copyAnnotations,
 		getConceptSet,
 		getGenerationInfo,
 		deleteConceptSet,
@@ -139,7 +162,10 @@ define(function (require) {
 		getVersion,
 		getVersionExpression,
 		updateVersion,
-		copyVersion
+		copyVersion,
+		saveConceptSetAnnotation,
+		getConceptSetAnnotation,
+		deleteConceptSetAnnotation
 	};
 
 	return api;

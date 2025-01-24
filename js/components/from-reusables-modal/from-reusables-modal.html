@@ -30,7 +30,7 @@
         <div class="selected-reusable-parameter" data-bind="eventListener: [{event: 'click', selector: '.conceptset_import', callback: $data.importCs}, {event: 'click', selector: '.conceptset_edit', callback: $data.importCs}]">
             <span data-bind="text: $data.name"></span>
             <conceptset-selector
-                    params="conceptSetId: $data.csId, conceptSets: $data.csArray, defaultText:ko.i18n('components.conditionOccurrence.anyCondition', 'Any Condition')">
+                    params="conceptSetId: $data.csId, conceptSets: $data.csArray, defaultText:ko.i18n('components.reusablesModal.anyConceptSet', 'Any Concept Set')">
             </conceptset-selector>
         </div>
         <!-- /ko -->
@@ -50,6 +50,7 @@
 </atlas-modal>
 
 <div data-bind="modal: showCsBrowser" class="modal fade cs-modal" tabindex="-1" role="dialog">
+    <!-- ko if:showCsBrowser-->
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header" data-bind="text: ko.i18n('components.conceptSetBuilder.selectConceptSet', 'Select Concept Set...')"></div>
@@ -62,4 +63,5 @@
             </div>
         </div>
     </div>
+    <!-- /ko -->
 </div>

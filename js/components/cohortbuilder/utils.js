@@ -4,9 +4,7 @@ function(
 ){
 
 	function getCriteriaComponent(data) {
-		if (data.hasOwnProperty("Person"))
-			return "person-criteria";
-		else if (data.hasOwnProperty("ConditionOccurrence"))
+		if (data.hasOwnProperty("ConditionOccurrence"))
 			return "condition-occurrence-criteria";
 		else if (data.hasOwnProperty("ConditionEra"))
 			return "condition-era-criteria";
@@ -22,6 +20,8 @@ function(
 			return "procedure-occurrence-criteria";
 		else if (data.hasOwnProperty("VisitOccurrence"))
 			return "visit-occurrence-criteria";
+		else if (data.hasOwnProperty("VisitDetail"))
+			return "visit-detail-criteria";
 		else if (data.hasOwnProperty("Observation"))
 			return "observation-criteria";
 		else if (data.hasOwnProperty("DeviceExposure"))
